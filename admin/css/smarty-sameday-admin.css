@@ -1,0 +1,8 @@
+/**
+ * All of the CSS for plugin admin functionality should be included in this file.
+ */
+
+.form-table { 
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 30px;
+}
