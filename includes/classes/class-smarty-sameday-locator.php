@@ -183,6 +183,7 @@ class Smarty_Sameday_Locator {
 		$this->loader->add_action('init', $plugin_public, 'register_shortcodes');
 		$this->loader->add_action('woocommerce_after_checkout_validation', $plugin_public, 'validate_sameday_locker', 10, 2);
 		$this->loader->add_filter('woocommerce_checkout_fields', $plugin_public, 'add_sameday_locker_field_to_checkout');
+		$this->loader->add_action('woocommerce_thankyou', $plugin_public, 'display_locker_on_thank_you', 20);
 	}
 
 	/**

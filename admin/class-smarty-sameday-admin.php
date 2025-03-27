@@ -605,10 +605,11 @@ class Smarty_Sameday_Admin {
 			
 					// Build the "nice" locker address
 					$locker_address = sprintf(
-						'Sameday: %s, %s (%s)',
-						$locker_details['full_address'] ?? '',
-						$locker_details['city_name'] ?? '',
-						$locker_details['sameday_id'] ?? ''
+						'Sameday: [%s] %s, %s (%s)',
+						esc_html($locker_details['name'] ?? __('Unknown Name', 'smarty-sameday-lockers-locator')),
+						esc_html($locker_details['full_address'] ?? __('Unknown Address', 'smarty-sameday-lockers-locator')),
+						esc_html($locker_details['city_name'] ?? __('Unknown City', 'smarty-sameday-lockers-locator')),
+						esc_html($locker_details['sameday_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator')),
 					);
 			
 					// Save to order meta fields
@@ -668,10 +669,11 @@ class Smarty_Sameday_Admin {
 				$locker_details = maybe_unserialize($sameday_locker_details);
 				if (is_array($locker_details)) {
 					$locker_info = sprintf(
-						'%s (%s)',
-						esc_html($locker_details['full_address'] ?? 'Unknown Address'),
-						esc_html($locker_details['sameday_id'] ?? 'Unknown ID')
-					); 
+						'<strong>[%s]</strong>: %s (%s)',
+						esc_html($locker_details['name'] ?? __('Unknown Name', 'smarty-sameday-lockers-locator')),
+						esc_html($locker_details['full_address'] ?? __('Unknown Address', 'smarty-sameday-lockers-locator')),
+						esc_html($locker_details['sameday_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator'))
+					);
 					?>
 					<p style="
 						background-color: #edffeb; 

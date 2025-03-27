@@ -344,4 +344,47 @@ class Smarty_Sameday_Public {
 
 		return $options;
 	}
+
+	/**
+	 * Display the selected Sameday Locker on the thank you page.
+	 *
+	 * @since 1.0.0
+	 * @param int $order_id
+	 */
+	public function display_locker_on_thank_you($order_id) {
+		if (!$order_id) {
+			return;
+		}
+
+		$order = wc_get_order($order_id);
+		$sameday_selected_option = get_post_meta($order_id, '_sameday_selected_option', true);
+
+		if ($sameday_selected_option === 'Sameday Locker') {
+			$sameday_locker_details = get_post_meta($order_id, '_sameday_locker_details', true);
+			$locker_details = maybe_unserialize($sameday_locker_details);
+
+			if (!empty($locker_details) && is_array($locker_details)) {
+				$locker_info = sprintf(
+					'<strong>[%s]</strong>: %s (%s)',
+					esc_html($locker_details['name'] ?? __('Unknown Name', 'smarty-sameday-lockers-locator')),
+					esc_html($locker_details['full_address'] ?? __('Unknown Address', 'smarty-sameday-lockers-locator')),
+					esc_html($locker_details['sameday_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator'))
+				);
+				?>
+				<section class="woocommerce-order-details sameday-locker-info" style="
+					margin-top: 20px;
+					background-color: #edffeb; 
+					border: 1px solid #bde5b9; 
+					border-radius: 3px; 
+					color: #333333;
+					padding: 10px;
+					display: flex; 
+					flex-flow: column;
+				">
+					<span style="padding: 5px;"><?php echo $locker_info; ?></span>
+				</section>
+				<?php
+			}
+		}
+	}
 }
