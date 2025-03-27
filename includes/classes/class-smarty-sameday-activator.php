@@ -46,7 +46,7 @@ class Smarty_Sameday_Activator {
         $sameday_lockers_table_name = $wpdb->prefix . SAMEDAY_DB_PREFIX . SAMEDAY_LOCKER_TABLE;
 
         $sql = "CREATE TABLE IF NOT EXISTS `{$sameday_lockers_table_name}` (
-            `sameday_id` INT(11) NOT NULL,
+            `locker_id` INT(11) NOT NULL,
             `name` VARCHAR(255) NOT NULL,
             `country` VARCHAR(100) NOT NULL,
             `city_name` VARCHAR(255) NOT NULL,
@@ -54,7 +54,7 @@ class Smarty_Sameday_Activator {
             `address` VARCHAR(255) NOT NULL,
             `full_address` VARCHAR(255) NOT NULL,
             `updated_at` DATETIME NOT NULL,
-            PRIMARY KEY (`sameday_id`)
+            PRIMARY KEY (`locker_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='All Sameday Lockers'";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

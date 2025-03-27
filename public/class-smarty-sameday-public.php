@@ -242,29 +242,36 @@ class Smarty_Sameday_Public {
 	 * @return string HTML content for the dropdown of lockers.
 	 */
 	public function get_sameday_lockers($atts) {
-		// Retrieve the country id from plugin settings; default to '100' if not set
-		$country_code = get_option('smarty_sameday_field_country_code');
-
-		// Fetch lockers based on the specified country code
-		$results = self::api_query_sameday_locker('', $country_code);
-
-		// Generate the HTML for the dropdown
-		$html = '<select id="sameday_locker" class="sameday-select-field" style="width: 100%; margin-bottom:20px;" name="sameday_locker"><option value="">' . _e('Choose Sameday Locker', 'smarty-sameday-lockers-locator') . '</option>';
-		
-		// Check if results are an array and not empty
-		if (is_array($results) && !empty($results)) {
-			// Populate dropdown options with lockers
-			foreach ($results as $val) {
-				$html .= '<option value="' . esc_attr($val['sameday_id']) . '">' . esc_html($val['full_address']) . '</option>';
-			}
-		} else {
+		global $wpdb;
+		$table = $wpdb->prefix . 'smarty_sameday_lockers';
+	
+		// Get first available country if none specified
+		$countries = smarty_get_available_countries();
+		$country_name = $atts['country'] ?? ($countries[0] ?? '');
+	
+		if (empty($country_name)) {
+			return '<p>' . __('No country found for lockers.', 'smarty-sameday-lockers-locator') . '</p>';
+		}
+	
+		$results = $wpdb->get_results(
+			$wpdb->prepare("SELECT * FROM {$table} WHERE country = %s ORDER BY city_name ASC, name ASC", $country_name),
+			ARRAY_A
+		);
+	
+		if (empty($results)) {
 			return '<p>' . __('No lockers found.', 'smarty-sameday-lockers-locator') . '</p>';
 		}
-
+	
+		$html = '<select id="sameday_locker" class="sameday-select-field" style="width: 100%; margin-bottom:20px;" name="sameday_locker">';
+		$html .= '<option value="">' . esc_html__('Choose Sameday Locker', 'smarty-sameday-lockers-locator') . '</option>';
+	
+		foreach ($results as $val) {
+			$html .= '<option value="' . esc_attr($val['locker_id']) . '">' . esc_html($val['full_address']) . '</option>';
+		}
+	
 		$html .= '</select>';
-
 		return $html;
-	}
+	}	
 
 	/**
 	 * Validates the Sameday lockers selection during the WooCommerce checkout process.
@@ -327,23 +334,31 @@ class Smarty_Sameday_Public {
 	 * @return array Associative array of locker options with locker code as key and address as value.
 	 */
 	public function get_locker_options() {
-		// Fetch country ID from plugin settings
-		$country_code = get_option('smarty_sameday_field_country_code');
-
-		// Fetch lockers based on the country ID
-		$lockers = self::api_query_sameday_locker($country_code);
-		$options = array();
-
-		// Add a default option at the start
-		$options[''] = __('Choose Sameday Locker', 'smarty-sameday-lockers-locator');
-
-		// Loop through lockers and add them to the options array
-		foreach ($lockers as $locker) {
-			$options[esc_attr($locker['sameday_id'])] = esc_html("{$locker['full_address']} [{$locker['name']}]");
+		global $wpdb;
+		$table = $wpdb->prefix . 'smarty_sameday_lockers';
+	
+		// Get the first country available
+		$countries = smarty_get_available_countries();
+		$country_name = $countries[0] ?? '';
+	
+		if (empty($country_name)) {
+			return array('' => __('No lockers available.', 'smarty-sameday-lockers-locator'));
 		}
-
+	
+		$results = $wpdb->get_results(
+			$wpdb->prepare("SELECT * FROM {$table} WHERE country = %s ORDER BY city_name ASC, name ASC", $country_name),
+			ARRAY_A
+		);
+	
+		$options = array();
+		$options[''] = __('Choose Sameday Locker', 'smarty-sameday-lockers-locator');
+	
+		foreach ($results as $locker) {
+			$options[esc_attr($locker['locker_id'])] = esc_html("{$locker['full_address']} [{$locker['name']}]");
+		}
+	
 		return $options;
-	}
+	}	
 
 	/**
 	 * Display the selected Sameday Locker on the thank you page.
@@ -368,7 +383,7 @@ class Smarty_Sameday_Public {
 					'<strong>[%s]</strong>: %s (%s)',
 					esc_html($locker_details['name'] ?? __('Unknown Name', 'smarty-sameday-lockers-locator')),
 					esc_html($locker_details['full_address'] ?? __('Unknown Address', 'smarty-sameday-lockers-locator')),
-					esc_html($locker_details['sameday_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator'))
+					esc_html($locker_details['locker_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator'))
 				);
 				?>
 				<section class="woocommerce-order-details sameday-locker-info" style="

@@ -15,6 +15,21 @@
  * @author     Smarty Studio | Martin Nestorov
  */
 
+/**
+ * Get available countries from the locker DB table.
+ *
+ * @since 1.0.0
+ * @return array List of country names
+ */
+function smarty_get_available_countries() {
+	global $wpdb;
+	$table = $wpdb->prefix . 'smarty_sameday_lockers';
+
+	$countries = $wpdb->get_col("SELECT DISTINCT country FROM {$table} ORDER BY country ASC");
+
+	return $countries;
+}
+
 if (!function_exists('_sll_write_logs')) {
 	/**
      * Writes logs for the plugin.

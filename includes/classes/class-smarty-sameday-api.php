@@ -176,7 +176,7 @@ class Smarty_Sameday_API {
                     );
 
                     $lockers[] = array(
-                        'sameday_id'    => $locker->lockerId ?? 0,
+                        'locker_id'    => $locker->lockerId ?? 0,
                         'name'          => sanitize_text_field($locker->name),
                         'country'       => sanitize_text_field($locker->country ?? ''),
                         'city_name'     => sanitize_text_field($locker->city),
@@ -225,7 +225,7 @@ class Smarty_Sameday_API {
             $result = $wpdb->replace(
                 $locker_table,
                 array(
-                    'sameday_id'   => $locker['sameday_id'],
+                    'locker_id'   => $locker['locker_id'],
                     'name'         => $locker['name'],
                     'country'      => $locker['country'],
                     'city_name'    => $locker['city_name'],
@@ -237,7 +237,7 @@ class Smarty_Sameday_API {
                 array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
             );
         
-            //_sll_write_logs("Insert result for locker {$locker['sameday_id']}: $result");
+            //_sll_write_logs("Insert result for locker {$locker['locker_id']}: $result");
         
             if ($result === false) {
                 _sll_write_logs('Database Error: ' . $wpdb->last_error);

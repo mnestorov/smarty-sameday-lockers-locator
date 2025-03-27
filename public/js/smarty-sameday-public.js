@@ -28,35 +28,36 @@
 	 */
 
     function setSamedayFieldVisibility() {
-		//console.log("Setting Sameday Field Visibility");
-		
-        let econtOfficeField = $('#econt_office');
-        let econtOfficeFieldRow = econtOfficeField.closest('.form-row');
         let samedayLockerField = $('#sameday_locker');
         let samedayLockerFieldRow = samedayLockerField.closest('.form-row');
         let billingCityField = $('#billing_city_field');
         let billingPostCode = $('#billing_postcode_field');
         let billingAddressField = $('#billing_address_1_field');
-
+    
         let hideSamedayLocker = sameday_params.hide_sameday_locker === 'yes';
-		//console.log("Hide Sameday Locker:", hideSamedayLocker);
-
-        if (hideSamedayLocker) {
-        	samedayLockerFieldRow.hide();
-		} else {
-			samedayLockerFieldRow.show();
-		}
-
-        if ($('#carrier_sameday_locker').is(':checked')) {
-			//console.log("Sameday Locker Selected");
+        let samedaySelected = $('#carrier_sameday_locker').is(':checked');
+    
+        if (samedaySelected) {
+            // Show locker field and init select2
+            if (!hideSamedayLocker) {
+                samedayLockerFieldRow.show();
+                if (!samedayLockerField.hasClass('select2-hidden-accessible')) {
+                    samedayLockerField.select2();
+                }
+            }
             billingCityField.hide();
             billingPostCode.hide();
             billingAddressField.hide();
-            econtOfficeFieldRow.hide();
-			samedayLockerField.attr('required', 'required').addClass('error-field');
+    
+            samedayLockerField.attr('required', 'required').addClass('error-field');
             samedayLockerFieldRow.find('label').html(`${sameday_params.selectSamedayLockerFieldTitle} <span style="color: #E01020;">*</span>`);
+        } else {
+            // Hide locker if Sameday not selected
+            samedayLockerFieldRow.hide();
+            samedayLockerField.removeAttr('required').removeClass('error-field');
+            $('#' + samedayLockerField.attr('id') + '-error').remove();
         }
-    }
+    }    
 
     // Function to display an error message below the select field
     function showSamedayErrorMessage(field, message) {

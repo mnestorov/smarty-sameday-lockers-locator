@@ -540,17 +540,26 @@ class Smarty_Sameday_Admin {
 	 * @return array|null The details of the locker or null if not found.
 	 */
 	public function get_locker_details_by_number($locker_id) {
-		$options = get_option('smarty_sameday_settings');
-		$country_code = $options['smarty_sameday_field_country_code'] ?? 'RO';
-		$lockers = $this->api_instance->query_sameday_lockers($country_code);
-		_sll_write_logs('Fetching lockers for country: ' . $country_code);
-		_sll_write_logs('All Lockers: ' . print_r($lockers, true));
+		global $wpdb;
+		$table = $wpdb->prefix . 'smarty_sameday_lockers';
 	
-		foreach ($lockers as $locker) {
-			if ((int) $locker['sameday_id'] === (int) $locker_id) {
-				_sll_write_logs('Found locker details for ID ' . $locker_id . ': ' . print_r($locker, true));
-				return $locker;
+		$locker = $wpdb->get_row(
+			$wpdb->prepare("SELECT * FROM {$table} WHERE locker_id = %d LIMIT 1", $locker_id),
+			ARRAY_A
+		);
+	
+		if ($locker) {
+			$available_countries = smarty_get_available_countries();
+	
+			_sll_write_logs('Locker found by ID ' . $locker_id . ': ' . print_r($locker, true));
+			_sll_write_logs('Available countries: ' . implode(', ', $available_countries));
+	
+			// Optional: warn if locker has unexpected country
+			if (!in_array($locker['country'], $available_countries, true)) {
+				_sll_write_logs('⚠️ Locker country not in available country list.');
 			}
+	
+			return $locker;
 		}
 	
 		_sll_write_logs('No locker found for ID: ' . $locker_id);
@@ -567,18 +576,22 @@ class Smarty_Sameday_Admin {
 	 * @return array|null The details of the locker or null if not found.
 	 */
 	public function get_locker_details_by_name($locker_name) {
-		$options = get_option('smarty_sameday_settings');
-		$country_code = $options['smarty_sameday_field_country_code'] ?? 'RO';
-		$lockers = $this->api_instance->query_sameday_lockers($country_code);
+		global $wpdb;
+		$table = $wpdb->prefix . 'smarty_sameday_lockers';
 	
-		foreach ($lockers as $locker) {
-			if (stripos($locker['name'], $locker_name) !== false) {
-				return $locker;
-			}
+		$locker = $wpdb->get_row(
+			$wpdb->prepare("SELECT * FROM {$table} WHERE name LIKE %s LIMIT 1", '%' . $wpdb->esc_like($locker_name) . '%'),
+			ARRAY_A
+		);
+	
+		if ($locker) {
+			_sll_write_logs('Locker found by name ' . $locker_name . ': ' . print_r($locker, true));
+			return $locker;
 		}
 	
+		_sll_write_logs('No locker found for name: ' . $locker_name);
 		return null;
-	}
+	}	
 
 	/**
 	 * Saves the user's selected Sameday option (locker) during WooCommerce checkout.
@@ -609,7 +622,7 @@ class Smarty_Sameday_Admin {
 						esc_html($locker_details['name'] ?? __('Unknown Name', 'smarty-sameday-lockers-locator')),
 						esc_html($locker_details['full_address'] ?? __('Unknown Address', 'smarty-sameday-lockers-locator')),
 						esc_html($locker_details['city_name'] ?? __('Unknown City', 'smarty-sameday-lockers-locator')),
-						esc_html($locker_details['sameday_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator')),
+						esc_html($locker_details['locker_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator')),
 					);
 			
 					// Save to order meta fields
@@ -672,7 +685,7 @@ class Smarty_Sameday_Admin {
 						'<strong>[%s]</strong>: %s (%s)',
 						esc_html($locker_details['name'] ?? __('Unknown Name', 'smarty-sameday-lockers-locator')),
 						esc_html($locker_details['full_address'] ?? __('Unknown Address', 'smarty-sameday-lockers-locator')),
-						esc_html($locker_details['sameday_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator'))
+						esc_html($locker_details['locker_id'] ?? __('Unknown ID', 'smarty-sameday-lockers-locator'))
 					);
 					?>
 					<p style="
