@@ -146,18 +146,26 @@ class Smarty_Sameday_Public {
 	public function add_sameday_radio_buttons() {
 		$logo_url = plugins_url('images/sameday-logo.png', __FILE__);
 		$default_locker = get_option('smarty_sameday_default_locker', 'no');
-    	$hide_locker = get_option('smarty_sameday_hide_locker', 'no');
+		$session_value = WC()->session->get('carrier_sameday');
+	
+		// Determine if it should be checked
+		$should_check = $default_locker === 'yes' || $session_value === 'Sameday Locker';
+		$hide_locker = get_option('smarty_sameday_hide_locker', 'no');
+	
+		if ($hide_locker === 'yes') { return; }
 		?>
 		<div class="sameday-radio-buttons">
-			<?php if ($hide_locker !== 'yes'): ?>
-				<div class="radio-wrap sameday">
-					<input type="radio" class="input-radio" value="Sameday Locker" name="carrier_sameday" id="carrier_sameday_locker" <?php if ($default_locker === 'yes') echo 'checked="checked"'; ?>>
-					<label for="carrier_sameday_locker" class="radio"><img src="<?php echo esc_url($logo_url); ?>" alt="Sameday Logo" width="110"> <?php _e('To Sameday Locker', 'smarty-sameday-lockers-locator'); ?></label>
-				</div>
-			<?php endif; ?>	
+			<div class="radio-wrap sameday <?php echo $should_check ? 'selected' : ''; ?>">
+				<input type="checkbox" class="input-radio" value="Sameday Locker" name="carrier_sameday" id="carrier_sameday_locker"
+					<?php checked($should_check); ?> />
+				<label for="carrier_sameday_locker" class="radio">
+					<img src="<?php echo esc_url($logo_url); ?>" alt="Sameday Logo" width="110" />
+					<?php _e('To Sameday Locker', 'smarty-sameday-lockers-locator'); ?>
+				</label>
+			</div>
 		</div>
 		<?php
-	}	
+	}		
 	
 	/**
 	 * Function to handle AJAX request and update shipping method in session.

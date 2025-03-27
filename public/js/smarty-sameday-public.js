@@ -33,6 +33,7 @@
         let billingCityField = $('#billing_city_field');
         let billingPostCode = $('#billing_postcode_field');
         let billingAddressField = $('#billing_address_1_field');
+        let billingStateField = $('#billing_state_field');
     
         let hideSamedayLocker = sameday_params.hide_sameday_locker === 'yes';
         let samedaySelected = $('#carrier_sameday_locker').is(':checked');
@@ -45,14 +46,21 @@
                     samedayLockerField.select2();
                 }
             }
+    
             billingCityField.hide();
             billingPostCode.hide();
             billingAddressField.hide();
+            billingStateField.hide();
     
             samedayLockerField.attr('required', 'required').addClass('error-field');
             samedayLockerFieldRow.find('label').html(`${sameday_params.selectSamedayLockerFieldTitle} <span style="color: #E01020;">*</span>`);
         } else {
-            // Hide locker if Sameday not selected
+            // Show billing fields again when not selected
+            billingCityField.show();
+            billingPostCode.show();
+            billingAddressField.show();
+            billingStateField.show();
+    
             samedayLockerFieldRow.hide();
             samedayLockerField.removeAttr('required').removeClass('error-field');
             $('#' + samedayLockerField.attr('id') + '-error').remove();
@@ -85,8 +93,6 @@
     // Function to handle change event on radio buttons
     function toggleSamedayLockerField() {
         setSamedayFieldVisibility();
-        // Add code to deselect Econt radio buttons
-        $('input[name="carrier_econt"]').prop('checked', false);
         updateSamedayRadioWrapBorder();
     }
 
@@ -106,14 +112,24 @@
         updateSamedayRadioWrapBorder();
     })
 
-    // Make entire radio-wrap clickable and maintain hover state
-    $('.radio-wrap').click(function () {
-        // Remove selected class from all radio-wraps
-        $('.radio-wrap').removeClass('selected');
-        // Add selected class to the clicked radio-wrap
-        $(this).addClass('selected');
-        // Check the radio button inside the clicked radio-wrap
-        $(this).find('input[type="radio"]').prop('checked', true).trigger('change');
+    // Make entire radio-wrap clickable and toggle checkbox behavior
+    $('.radio-wrap').click(function (e) {
+        const checkbox = $(this).find('input[type="checkbox"]');
+
+        // Prevent default label toggle behavior (which may conflict)
+        e.preventDefault();
+
+        // Toggle checkbox checked state
+        const isChecked = checkbox.prop('checked');
+        checkbox.prop('checked', !isChecked).trigger('change');
+
+        // Toggle selected class
+        if (!isChecked) {
+            $('.radio-wrap').removeClass('selected');
+            $(this).addClass('selected');
+        } else {
+            $(this).removeClass('selected');
+        }
     });
 
     // Form submit event
