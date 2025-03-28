@@ -36,9 +36,11 @@
     cursor: pointer;
 }
 
+/*
 .radio-wrap.sameday label img {
     margin-right: 10px;
 }
+*/
 
 @media screen and (max-width: 767px) {
     .sameday-radio-buttons {

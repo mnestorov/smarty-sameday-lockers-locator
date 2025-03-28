@@ -145,22 +145,29 @@ class Smarty_Sameday_Public {
 	 */
 	public function add_sameday_radio_buttons() {
 		$logo_url = plugins_url('images/sameday-logo.png', __FILE__);
-		$default_locker = get_option('smarty_sameday_default_locker', 'no');
+		$enable_address = get_option('smarty_sameday_enable_address', 'no');
 		$session_value = WC()->session->get('carrier_sameday');
-	
-		// Determine if it should be checked
-		$should_check = $default_locker === 'yes' || $session_value === 'Sameday Locker';
+		$should_check_address = empty($session_value) || $session_value === 'Sameday Address';
+		$should_check_locker  = $session_value === 'Sameday Locker';
 		$hide_locker = get_option('smarty_sameday_hide_locker', 'no');
 	
 		if ($hide_locker === 'yes') { return; }
 		?>
 		<div class="sameday-radio-buttons">
-			<div class="radio-wrap sameday <?php echo $should_check ? 'selected' : ''; ?>">
+			<?php if ($enable_address === 'yes') : ?>
+				<div class="radio-wrap sameday sameday-to-address <?php echo $should_check_address ? 'selected' : ''; ?>">
+					<input type="checkbox" class="input-radio" value="Sameday Address" name="carrier_sameday" id="carrier_sameday_address"
+						<?php checked($should_check_address); ?> />
+					<label for="carrier_sameday_address" class="radio">
+						<?php _e('To Address', 'smarty-sameday-lockers-locator'); ?>
+					</label>
+				</div>
+			<?php endif; ?>
+			<div class="radio-wrap sameday sameday-locker <?php echo $should_check_locker ? 'selected' : ''; ?>">
 				<input type="checkbox" class="input-radio" value="Sameday Locker" name="carrier_sameday" id="carrier_sameday_locker"
-					<?php checked($should_check); ?> />
+					<?php checked($should_check_locker); ?> />
 				<label for="carrier_sameday_locker" class="radio">
 					<img src="<?php echo esc_url($logo_url); ?>" alt="Sameday Logo" width="110" />
-					<?php _e('To Sameday Locker', 'smarty-sameday-lockers-locator'); ?>
 				</label>
 			</div>
 		</div>
@@ -175,9 +182,9 @@ class Smarty_Sameday_Public {
 	 */
 	public function update_shipping_method() {
 		if (isset($_POST['shipping_method'])) {
+			WC()->session->set('carrier_sameday', sanitize_text_field($_POST['shipping_method']));
 			WC()->session->set('chosen_shipping_method', sanitize_text_field($_POST['shipping_method']));
 		}
-
 		wp_send_json_success('Shipping method updated');
 	}
 
@@ -191,7 +198,7 @@ class Smarty_Sameday_Public {
 		$chosen_shipping_method = WC()->session->get('chosen_shipping_method');
 
 		if ($chosen_shipping_method === 'Sameday Locker') {
-			add_filter('woocommerce_checkout_fields', array($this, 'custom_override_checkout_fields'));
+			add_filter('woocommerce_checkout_fields', array($this, 'override_checkout_fields'));
 		}
 	}
 
@@ -202,7 +209,7 @@ class Smarty_Sameday_Public {
 	 * @param    array    $fields    Array of all checkout fields.
 	 * @return   array    Modified checkout fields.
 	 */
-	public function custom_override_checkout_fields($fields) {
+	public function override_checkout_fields($fields) {
 		unset($fields['billing']['billing_city']['required']);
 		unset($fields['billing']['billing_address_1']['required']);
 
@@ -210,6 +217,8 @@ class Smarty_Sameday_Public {
 		$chosen_shipping_method = WC()->session->get('chosen_shipping_method');
 
 		if ($chosen_shipping_method === 'Sameday Locker') {
+			unset($fields['billing']['billing_city']['required']);
+			unset($fields['billing']['billing_address_1']['required']);
 			unset($fields['billing']['billing_country']['required']);
 		}
 
@@ -226,9 +235,15 @@ class Smarty_Sameday_Public {
 	 * @since    1.0.0
 	 * @return   void
 	 */
-	public function custom_sameday_locker_validation() {
-		if (isset($_POST['carrier_sameday']) && $_POST['carrier_sameday'] === 'Sameday Locker' && empty($_POST['sameday_locker'])) {
-			wc_add_notice(__('Please select an Sameday locker.', 'smarty-sameday-lockers-locator'), 'error');
+	public function sameday_locker_validation() {
+		if (!isset($_POST['carrier_sameday'])) {
+			return;
+		}
+	
+		$carrier = sanitize_text_field($_POST['carrier_sameday']);
+	
+		if ($carrier === 'Sameday Locker' && empty($_POST['sameday_locker'])) {
+			wc_add_notice(__('Please select a Sameday locker.', 'smarty-sameday-lockers-locator'), 'error');
 		}
 	}
 
@@ -274,8 +289,16 @@ class Smarty_Sameday_Public {
 		$html .= '<option value="">' . esc_html__('Choose Sameday Locker', 'smarty-sameday-lockers-locator') . '</option>';
 	
 		foreach ($results as $val) {
-			$html .= '<option value="' . esc_attr($val['locker_id']) . '">' . esc_html($val['full_address']) . '</option>';
-		}
+			$html .= sprintf(
+				'<option value="%s" data-city="%s" data-postcode="%s" data-address="%s" data-state="%s">%s</option>',
+				esc_attr($val['locker_id']),
+				esc_attr($val['city_name']),
+				esc_attr($val['post_code']),
+				esc_attr($val['full_address']),
+				esc_attr($val['county']),
+				esc_html($val['full_address']) . ' [' . esc_html($val['name']) . ']'
+			);
+		}		
 	
 		$html .= '</select>';
 		return $html;

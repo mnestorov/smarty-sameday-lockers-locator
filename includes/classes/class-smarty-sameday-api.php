@@ -177,12 +177,13 @@ class Smarty_Sameday_API {
 
                     $lockers[] = array(
                         'locker_id'    => $locker->lockerId ?? 0,
-                        'name'          => sanitize_text_field($locker->name),
+                        'name'          => sanitize_text_field($locker->name ?? ''),
                         'country'       => sanitize_text_field($locker->country ?? ''),
-                        'city_name'     => sanitize_text_field($locker->city),
+                        'county'        => sanitize_text_field($locker->county ?? ''),
+                        'city_name'     => sanitize_text_field($locker->city ?? ''),
                         'post_code'     => sanitize_text_field($locker->postalCode ?? ''),
                         'address'       => sanitize_text_field($locker->address ?? ''),
-                        'full_address'  => sanitize_text_field($full_address),
+                        'full_address'  => sanitize_text_field($full_address ?? ''),
                         'updated_at'    => current_time('mysql'),
                     );
                 }
@@ -228,13 +229,14 @@ class Smarty_Sameday_API {
                     'locker_id'   => $locker['locker_id'],
                     'name'         => $locker['name'],
                     'country'      => $locker['country'],
+                    'county'       => $locker['county'],
                     'city_name'    => $locker['city_name'],
                     'post_code'    => $locker['post_code'],
                     'address'      => $locker['address'],
                     'full_address' => $locker['full_address'],
                     'updated_at'   => $locker['updated_at'],
                 ),
-                array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+                array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
             );
         
             //_sll_write_logs("Insert result for locker {$locker['locker_id']}: $result");
@@ -288,5 +290,5 @@ class Smarty_Sameday_API {
     
         $results = $wpdb->get_results($query, 'ARRAY_A');
         return $results;
-    }    
+    }
 }

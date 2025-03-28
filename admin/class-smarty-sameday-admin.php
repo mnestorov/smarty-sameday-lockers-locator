@@ -166,6 +166,7 @@ class Smarty_Sameday_Admin {
 		// Registers a setting and its data]
 		register_setting('smarty-sameday-settings-options', 'smarty_sameday_settings');
 		register_setting('smarty-sameday-settings-options', 'smarty_sameday_country_code');
+		register_setting('smarty-sameday-settings-options', 'smarty_sameday_enable_address');
 		register_setting('smarty-sameday-settings-options', 'smarty_sameday_default_locker');
 		register_setting('smarty-sameday-settings-options', 'smarty_sameday_hide_locker');
 	
@@ -224,6 +225,14 @@ class Smarty_Sameday_Admin {
 			array($this, 'section_visualization_cb'),	                        // Callback function that fills the section with the desired content
 			'smarty-sameday-settings'					                        // Page on which to add the section
 		);
+
+		add_settings_field(
+			'smarty_sameday_enable_address',
+			__('Enable Delivery to Address', 'smarty-sameday-lockers-locator'),
+			array($this, 'checkbox_enable_address_cb'),
+			'smarty-sameday-settings',
+			'smarty_sameday_section_visualization'
+		);		
 	
 		add_settings_field(
 			'smarty_sameday_default_locker', 
@@ -360,6 +369,18 @@ class Smarty_Sameday_Admin {
 		$nonce = wp_create_nonce('smarty_sameday_update_nonce');
 		echo '<button type="button" id="smarty_sameday_manual_update" class="button button-secondary">' . esc_html__('Update Now', 'smarty-sameday-lockers-locator') . '</button>';
 		echo '<div id="smarty_sameday_update_message"></div>'; // Placeholder for the message
+	}
+
+	/**
+	 * Callback function for the checkbox to enable address.
+	 *
+	 * @since    1.0.0
+	 * @return void
+	 */
+	public function checkbox_enable_address_cb() {
+		$option = get_option('smarty_sameday_enable_address', 'no');
+		$checked = $option === 'yes' ? 'checked' : '';
+		echo '<input type="checkbox" id="smarty_sameday_enable_address" name="smarty_sameday_enable_address" ' . $checked . ' value="yes">';
 	}
 	
 	/**
@@ -556,7 +577,7 @@ class Smarty_Sameday_Admin {
 	
 			// Optional: warn if locker has unexpected country
 			if (!in_array($locker['country'], $available_countries, true)) {
-				_sll_write_logs('⚠️ Locker country not in available country list.');
+				_sll_write_logs('Locker country not in available country list.');
 			}
 	
 			return $locker;
@@ -567,28 +588,31 @@ class Smarty_Sameday_Admin {
 	}	
 
 	/**
-	 * Retrieves the full details of a Sameday locker based on its name.
+	 * Retrieves the full details of a Sameday locker based on its name or ID fallback.
 	 * 
-	 * This function is used to find the locker details based on the user's selection.
-	 * 
-	 * @since    1.0.0
-	 * @param string $locker_name The name of the Sameday locker.
-	 * @return array|null The details of the locker or null if not found.
+	 * @since 1.0.0
+	 * @param string $locker_name The locker name (or mistakenly passed locker_id).
+	 * @return array|null
 	 */
 	public function get_locker_details_by_name($locker_name) {
+		if (is_numeric($locker_name)) {
+			_sll_write_logs('get_locker_details_by_name received locker ID instead of name. Redirecting to get_locker_details_by_number.');
+			return $this->get_locker_details_by_number((int) $locker_name);
+		}
+
 		global $wpdb;
 		$table = $wpdb->prefix . 'smarty_sameday_lockers';
-	
+
 		$locker = $wpdb->get_row(
 			$wpdb->prepare("SELECT * FROM {$table} WHERE name LIKE %s LIMIT 1", '%' . $wpdb->esc_like($locker_name) . '%'),
 			ARRAY_A
 		);
-	
+
 		if ($locker) {
 			_sll_write_logs('Locker found by name ' . $locker_name . ': ' . print_r($locker, true));
 			return $locker;
 		}
-	
+
 		_sll_write_logs('No locker found for name: ' . $locker_name);
 		return null;
 	}	
@@ -629,7 +653,7 @@ class Smarty_Sameday_Admin {
 					update_post_meta($order_id, 'billing_sameday_lockers', $locker_address);
 					update_post_meta($order_id, '_shipping_address_1', $locker_address);
 			
-					// Overwrite "Test 123" or any other user-typed billing address fields
+					// Overwrite user-typed billing address fields
 					$order = wc_get_order($order_id);
 			
 					// Shipping address
@@ -638,6 +662,10 @@ class Smarty_Sameday_Admin {
 					// Billing address
 					$order->set_billing_address_1($locker_address);
 					$order->set_billing_city($locker_details['city_name']); 
+
+					// Billing state
+					$order->set_billing_state($locker_address);
+					$order->set_billing_state($locker_details['county']);
 			
 					// Postcode for both
 					if (!empty($locker_details['post_code'])) {

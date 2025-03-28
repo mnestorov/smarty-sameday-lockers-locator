@@ -49,6 +49,7 @@ class Smarty_Sameday_Activator {
             `locker_id` INT(11) NOT NULL,
             `name` VARCHAR(255) NOT NULL,
             `country` VARCHAR(100) NOT NULL,
+            `county` VARCHAR(100) NOT NULL,
             `city_name` VARCHAR(255) NOT NULL,
             `post_code` VARCHAR(20) NOT NULL,
             `address` VARCHAR(255) NOT NULL,

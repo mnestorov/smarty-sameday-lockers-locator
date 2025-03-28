@@ -28,149 +28,160 @@
 	 */
 
     function setSamedayFieldVisibility() {
-        let samedayLockerField = $('#sameday_locker');
-        let samedayLockerFieldRow = samedayLockerField.closest('.form-row');
-        let billingCityField = $('#billing_city_field');
-        let billingPostCode = $('#billing_postcode_field');
-        let billingAddressField = $('#billing_address_1_field');
-        let billingStateField = $('#billing_state_field');
-    
-        let hideSamedayLocker = sameday_params.hide_sameday_locker === 'yes';
-        let samedaySelected = $('#carrier_sameday_locker').is(':checked');
-    
-        if (samedaySelected) {
-            // Show locker field and init select2
+        const lockerCheckbox = $('#carrier_sameday_locker');
+        const addressCheckbox = $('#carrier_sameday_address');
+
+        const lockerSelected = lockerCheckbox.is(':checked');
+        const addressSelected = addressCheckbox.is(':checked');
+
+        const lockerField = $('#sameday_locker');
+        const lockerFieldRow = lockerField.closest('.form-row');
+
+        const billingCityField = $('#billing_city_field');
+        const billingPostCode = $('#billing_postcode_field');
+        const billingAddressField = $('#billing_address_1_field');
+        const billingStateField = $('#billing_state_field');
+
+        const hideSamedayLocker = sameday_params.hide_sameday_locker === 'yes';
+
+        if (lockerSelected) {
             if (!hideSamedayLocker) {
-                samedayLockerFieldRow.show();
-                if (!samedayLockerField.hasClass('select2-hidden-accessible')) {
-                    samedayLockerField.select2();
+                lockerFieldRow.show();
+                if (!lockerField.hasClass('select2-hidden-accessible')) {
+                    lockerField.select2();
                 }
             }
-    
+
             billingCityField.hide();
             billingPostCode.hide();
             billingAddressField.hide();
             billingStateField.hide();
-    
-            samedayLockerField.attr('required', 'required').addClass('error-field');
-            samedayLockerFieldRow.find('label').html(`${sameday_params.selectSamedayLockerFieldTitle} <span style="color: #E01020;">*</span>`);
+
+            lockerField.attr('required', 'required').addClass('error-field');
+            lockerFieldRow.find('label').html(`${sameday_params.selectSamedayLockerFieldTitle} <span style="color: #E01020;">*</span>`);
         } else {
-            // Show billing fields again when not selected
+            lockerFieldRow.hide();
+            lockerField.removeAttr('required').removeClass('error-field');
+            $('#' + lockerField.attr('id') + '-error').remove();
+        }
+
+        if (addressSelected) {
             billingCityField.show();
             billingPostCode.show();
             billingAddressField.show();
             billingStateField.show();
-    
-            samedayLockerFieldRow.hide();
-            samedayLockerField.removeAttr('required').removeClass('error-field');
-            $('#' + samedayLockerField.attr('id') + '-error').remove();
+        } else if (!lockerSelected) {
+            // if none are selected, reset everything
+            billingCityField.show();
+            billingPostCode.show();
+            billingAddressField.show();
+            billingStateField.show();
         }
-    }    
+    }
 
-    // Function to display an error message below the select field
     function showSamedayErrorMessage(field, message) {
         let errorMessageId = field.attr('id') + '-error';
-        let existingMessage = $('#' + errorMessageId);
-
-        if (existingMessage.length > 0) {
-            existingMessage.remove();
-        }
-
+        $('#' + errorMessageId).remove();
         field.closest('.woocommerce-input-wrapper').after('<div id="' + errorMessageId + '" class="error-message"><b>' + message + '</b></div>');
     }
 
-    // Function to update the border color for selected radio button
     function updateSamedayRadioWrapBorder() {
         $('.radio-wrap').each(function () {
-            if ($(this).find('input[type="radio"]').is(':checked')) {
+            if ($(this).find('input[type="checkbox"]').is(':checked')) {
                 $(this).addClass('selected');
             } else {
                 $(this).removeClass('selected');
             }
         });
-    };
+    }
 
-    // Function to handle change event on radio buttons
     function toggleSamedayLockerField() {
         setSamedayFieldVisibility();
         updateSamedayRadioWrapBorder();
     }
 
-    // Function to extract city name from the selected Sameday Locker and set it to the hidden billing_city field
-	function updateHiddenBillingCityField() {
-        // Don’t try to extract city anymore
-        let selectedLocker = $('#sameday_locker').val();
-    
+    function updateHiddenBillingCityField() {
+        const selectedLocker = $('#sameday_locker').val();
         if (selectedLocker) {
-            $('#billing_city').val(selectedLocker); // set it just so form doesn't error out
+            $('#billing_city').val(selectedLocker);
         }
     }
 
-    // Event handler for radio button change
+    // Handle changing shipping checkboxes
     $('input[name="carrier_sameday"]').change(function () {
         toggleSamedayLockerField();
         updateSamedayRadioWrapBorder();
-    })
 
-    // Make entire radio-wrap clickable and toggle checkbox behavior
-    $('.radio-wrap').click(function (e) {
-        const checkbox = $(this).find('input[type="checkbox"]');
-
-        // Prevent default label toggle behavior (which may conflict)
-        e.preventDefault();
-
-        // Toggle checkbox checked state
-        const isChecked = checkbox.prop('checked');
-        checkbox.prop('checked', !isChecked).trigger('change');
-
-        // Toggle selected class
-        if (!isChecked) {
-            $('.radio-wrap').removeClass('selected');
-            $(this).addClass('selected');
-        } else {
-            $(this).removeClass('selected');
-        }
-    });
-
-    // Form submit event
-    $('form.checkout').on('submit', function (e) {
-        const samedayLockerField = $('#sameday_locker');
-        if (samedayLockerField.is(':visible') && samedayLockerField.prop('required') && samedayLockerField.val() === '') {
-            samedayLockerField.addClass('error-field');
-            showSamedayErrorMessage(samedayLockerField, sameday_params.selectSamedayLockerMessage);
-            e.preventDefault(); // Prevent form submission
-        }
-    });
-
-    // Remove the error message when an option is selected in the Sameday locker field
-    $('#sameday_locker').on('change', function () {
-        updateHiddenBillingCityField(); // Update the hidden billing_city field when Sameday Locker changes
-        $(this).removeClass('error-field');
-        $('#' + $(this).attr('id') + '-error').remove(); // Remove the error message
-    });
-
-    // Handle AJAX request to update the shipping method in session
-    $('input[name="carrier_sameday"]').change(function () {
-        var shippingMethod = $(this).val();
+        const selectedValue = $(this).val();
         $.ajax({
             type: 'POST',
             url: wc_checkout_params.ajax_url,
             data: {
                 action: 'update_shipping_method',
-                shipping_method: shippingMethod
-            },
-            //success: function (response) {
-            //	console.log(response);
-            //}
+                shipping_method: selectedValue
+            }
         });
     });
 
-    $(document).ready(function() {
+    // Make .radio-wrap divs clickable
+    $('.radio-wrap').click(function (e) {
+        e.preventDefault();
+        const checkbox = $(this).find('input[type="checkbox"]');
+        const isChecked = checkbox.prop('checked');
+
+        $('input[name="carrier_sameday"]').prop('checked', false); // only one at a time
+        $('.radio-wrap').removeClass('selected');
+
+        if (!isChecked) {
+            checkbox.prop('checked', true).trigger('change');
+            $(this).addClass('selected');
+        }
+    });
+
+    // On form submit
+    $('form.checkout').on('submit', function (e) {
+        const lockerField = $('#sameday_locker');
+        const lockerSelected = $('#carrier_sameday_locker').is(':checked');
+
+        if (lockerSelected && lockerField.prop('required') && lockerField.val() === '') {
+            lockerField.addClass('error-field');
+            showSamedayErrorMessage(lockerField, sameday_params.selectSamedayLockerMessage);
+            e.preventDefault();
+        }
+    });
+
+    $('#sameday_locker').on('change', function () {
+        updateHiddenBillingCityField();
+        $(this).removeClass('error-field');
+        $('#' + $(this).attr('id') + '-error').remove();
+    });
+
+    $(document).ready(function () {
         setTimeout(function () {
-         	setSamedayFieldVisibility();
-         	updateSamedayRadioWrapBorder();
-         	$('#sameday_locker').select2();
+            setSamedayFieldVisibility();
+            updateSamedayRadioWrapBorder();
+            $('#sameday_locker').select2();
             updateHiddenBillingCityField();
-		}, 50);
-    });     
+    
+            // Default to "To Address" if neither is selected
+            const lockerInput = $('#carrier_sameday_locker');
+            const addressInput = $('#carrier_sameday_address');
+
+            if (!lockerInput.is(':checked') && !addressInput.is(':checked')) {
+                addressInput.prop('checked', true).trigger('change');
+                $('.radio-wrap').removeClass('selected');
+                addressInput.closest('.radio-wrap').addClass('selected');
+
+                // Also update the session in WooCommerce
+                $.ajax({
+                    type: 'POST',
+                    url: wc_checkout_params.ajax_url,
+                    data: {
+                        action: 'update_shipping_method',
+                        shipping_method: addressInput.val()
+                    }
+                });
+            }
+        }, 50);
+    });    
 })(jQuery);
