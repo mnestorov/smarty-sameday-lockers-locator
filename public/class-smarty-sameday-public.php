@@ -182,8 +182,11 @@ class Smarty_Sameday_Public {
 	 */
 	public function update_shipping_method() {
 		if (isset($_POST['shipping_method'])) {
-			WC()->session->set('carrier_sameday', sanitize_text_field($_POST['shipping_method']));
-			WC()->session->set('chosen_shipping_method', sanitize_text_field($_POST['shipping_method']));
+			$shipping_method = sanitize_text_field($_POST['shipping_method']);
+			WC()->session->__unset('carrier_sameday'); // Reset session value
+			WC()->session->set('chosen_shipping_methods', array($shipping_method));
+			WC()->session->set('carrier_sameday', $shipping_method);
+			_sll_write_logs('Updated shipping method in session: ' . $shipping_method);
 		}
 		wp_send_json_success('Shipping method updated');
 	}
@@ -195,11 +198,23 @@ class Smarty_Sameday_Public {
 	 * @return   void
 	 */
 	public function conditionally_skip_validation() {
-		$chosen_shipping_method = WC()->session->get('chosen_shipping_method');
-
-		if ($chosen_shipping_method === 'Sameday Locker') {
-			add_filter('woocommerce_checkout_fields', array($this, 'override_checkout_fields'));
+		add_filter('woocommerce_checkout_fields', array($this, 'override_checkout_fields'));
+		add_filter('woocommerce_billing_fields', array($this, 'remove_postcode_required'), 9999);
+	}
+	
+	/**
+	 * Function to remove the required attribute from the postcode field.
+	 * 
+	 * @since    1.0.0
+	 * @param    array    $fields    Array of all checkout fields.
+	 * @return   array    Modified checkout fields.
+	 */
+	public function remove_postcode_required($fields) {
+		$carrier = WC()->session->get('carrier_sameday');
+		if ($carrier === 'Sameday Locker' && isset($fields['billing_postcode'])) {
+			$fields['billing_postcode']['required'] = false;
 		}
+		return $fields;
 	}
 
 	/**
@@ -210,18 +225,23 @@ class Smarty_Sameday_Public {
 	 * @return   array    Modified checkout fields.
 	 */
 	public function override_checkout_fields($fields) {
-		unset($fields['billing']['billing_city']['required']);
-		unset($fields['billing']['billing_address_1']['required']);
-
-		// Additionally, conditionally unset the required attribute for country
-		$chosen_shipping_method = WC()->session->get('chosen_shipping_method');
-
-		if ($chosen_shipping_method === 'Sameday Locker') {
-			unset($fields['billing']['billing_city']['required']);
-			unset($fields['billing']['billing_address_1']['required']);
-			unset($fields['billing']['billing_country']['required']);
+		$carrier = WC()->session->get('carrier_sameday');
+	
+		if ($carrier === 'Sameday Locker') {
+			if (isset($fields['billing']['billing_city'])) {
+				$fields['billing']['billing_city']['required'] = false;
+			}
+			if (isset($fields['billing']['billing_address_1'])) {
+				$fields['billing']['billing_address_1']['required'] = false;
+			}
+			if (isset($fields['billing']['billing_country'])) {
+				$fields['billing']['billing_country']['required'] = false;
+			}
+			if (isset($fields['billing']['billing_postcode'])) {
+				$fields['billing']['billing_postcode']['required'] = false;
+			}
 		}
-
+	
 		return $fields;
 	}
 
@@ -236,11 +256,8 @@ class Smarty_Sameday_Public {
 	 * @return   void
 	 */
 	public function sameday_locker_validation() {
-		if (!isset($_POST['carrier_sameday'])) {
-			return;
-		}
-	
-		$carrier = sanitize_text_field($_POST['carrier_sameday']);
+		$carrier = WC()->session->get('carrier_sameday'); // NOT $_POST
+		_sll_write_logs('Carrier value in sameday_locker_validation (from session): ' . $carrier);
 	
 		if ($carrier === 'Sameday Locker' && empty($_POST['sameday_locker'])) {
 			wc_add_notice(__('Please select a Sameday locker.', 'smarty-sameday-lockers-locator'), 'error');
@@ -302,20 +319,6 @@ class Smarty_Sameday_Public {
 	
 		$html .= '</select>';
 		return $html;
-	}	
-
-	/**
-	 * Validates the Sameday lockers selection during the WooCommerce checkout process.
-	 * 
-	 * @since    1.0.0 
-	 * @param array $fields Array of all checkout fields.
-	 * @param WP_Error $errors WP_Error object for storing validation errors.
-	 */
-	public function validate_sameday_locker($fields, $errors) {
-		// Checks if Sameday locker is selected when Sameday is chosen as the carrier
-		if (preg_match('/LOCKER/', $fields['carrier']) && empty( $fields['billing_sameday_lockers'])) {
-			$errors->add('validation', 'Please, choose the Sameday locker.');
-		}
 	}
 
 	/**
