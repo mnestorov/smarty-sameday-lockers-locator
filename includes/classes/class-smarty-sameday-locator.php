@@ -177,7 +177,7 @@ class Smarty_Sameday_Locator {
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 		$this->loader->add_action('woocommerce_before_checkout_billing_form', $plugin_public, 'add_sameday_radio_buttons');
 		$this->loader->add_action('wp_ajax_update_shipping_method', $plugin_public, 'update_shipping_method');
-		$this->loader->add_action('woocommerce_checkout_process', $plugin_public, 'sameday_locker_validation');
+		$this->loader->add_action('woocommerce_checkout_process', $plugin_public, 'custom_sameday_locker_validation');
 		$this->loader->add_action('wp_ajax_nopriv_update_shipping_method', $plugin_public, 'update_shipping_method');
 		$this->loader->add_action('woocommerce_checkout_process', $plugin_public, 'conditionally_skip_validation');
 		$this->loader->add_action('init', $plugin_public, 'register_shortcodes');
