@@ -113,16 +113,4 @@
         $(this).removeClass('error-field');
         $(`#${$(this).attr('id')}-error`).remove();
     });
-    
-    $(document).on('click', '.radio-wrap', function (e) {
-        const radio = $(this).find('input[type="radio"]');
-
-        if (!$(e.target).is('input[type="radio"], label, img')) {
-            radio.prop('checked', true).trigger('change');
-        }
-
-        updateRadioSelectionUI();
-        toggleFieldsBasedOnShipping();
-        updateSamedaySelection(radio.val());
-    });
 })(jQuery);

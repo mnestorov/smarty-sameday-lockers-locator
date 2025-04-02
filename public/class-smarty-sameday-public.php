@@ -155,21 +155,19 @@ class Smarty_Sameday_Public {
 		?>
 		<div class="sameday-radio-buttons">
 			<?php if ($enable_address === 'yes') : ?>
-				<div class="radio-wrap sameday sameday-to-address <?php echo $should_check_address ? 'selected' : ''; ?>">
-					<input type="radio" class="input-radio" value="Sameday Address" name="carrier_sameday" id="carrier_sameday_address"
-						<?php checked($should_check_address); ?> />
-					<label for="carrier_sameday_address" class="radio">
+				<label for="carrier_sameday_address" class="radio">
+					<div class="radio-wrap sameday sameday-to-address <?php echo $should_check_address ? 'selected' : ''; ?>">
+						<input type="radio" class="input-radio" value="Sameday Address" name="carrier_sameday" id="carrier_sameday_address" <?php checked($should_check_address); ?> />
 						<?php _e('To Address', 'smarty-sameday-lockers-locator'); ?>
-					</label>
-				</div>
-			<?php endif; ?>
-			<div class="radio-wrap sameday sameday-locker <?php echo $should_check_locker ? 'selected' : ''; ?>">
-				<input type="radio" class="input-radio" value="Sameday Locker" name="carrier_sameday" id="carrier_sameday_locker"
-					<?php checked($should_check_locker); ?> />
-				<label for="carrier_sameday_locker" class="radio">
-					<img src="<?php echo esc_url($logo_url); ?>" alt="Sameday Logo" width="110" />
+					</div>
 				</label>
-			</div>
+			<?php endif; ?>
+			<label for="carrier_sameday_locker" class="radio">	
+				<div class="radio-wrap sameday sameday-locker <?php echo $should_check_locker ? 'selected' : ''; ?>">
+					<input type="radio" class="input-radio" value="Sameday Locker" name="carrier_sameday" id="carrier_sameday_locker" <?php checked($should_check_locker); ?> />
+					<img src="<?php echo esc_url($logo_url); ?>" alt="Sameday Logo" width="110" />
+				</div>
+			</label>
 		</div>
 		<?php
 	}		
