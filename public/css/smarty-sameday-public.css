@@ -8,6 +8,10 @@
     margin-bottom: 2.5rem;
 }
 
+.radio-wrap {
+    cursor: pointer;
+}
+
 .radio-wrap.sameday {
     display: flex;
     align-items: center;
