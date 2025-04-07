@@ -17,12 +17,16 @@
     align-items: center;
     background-color: #f5f5f5;
     border: 2px solid #dddddd;
-    padding: 10px 30px;
+    padding: 10px 10px;
     margin-top: 10px;
     border-radius: 5px;
     cursor: pointer;
     transition: border-color 0.3s;
     height: 50px;
+}
+
+.radio-wrap.sameday img {
+    margin-right: 10px;
 }
 
 .radio-wrap.sameday.selected,

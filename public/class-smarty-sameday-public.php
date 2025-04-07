@@ -144,7 +144,8 @@ class Smarty_Sameday_Public {
 	 * @return   void
 	 */
 	public function add_sameday_radio_buttons() {
-		$logo_url = plugins_url('images/sameday-logo.png', __FILE__);
+		$logo_easybox_url = plugins_url('images/easybox.png', __FILE__);
+		$logo_sameday_url = plugins_url('images/sameday.png', __FILE__);
 		$enable_address = get_option('smarty_sameday_enable_address', 'no');
 		$session_value = WC()->session->get('carrier_sameday');
 		$should_check_address = empty($session_value) || $session_value === 'Sameday Address';
@@ -158,14 +159,14 @@ class Smarty_Sameday_Public {
 				<label for="carrier_sameday_address" class="radio">
 					<div class="radio-wrap sameday sameday-to-address <?php echo $should_check_address ? 'selected' : ''; ?>">
 						<input type="radio" class="input-radio" value="Sameday Address" name="carrier_sameday" id="carrier_sameday_address" <?php checked($should_check_address); ?> />
-						<?php _e('To Address', 'smarty-sameday-lockers-locator'); ?>
+						<img src="<?php echo esc_url($logo_sameday_url); ?>" alt="Sameday Logo" width="110" />&nbsp;<?php _e('To Address', 'smarty-sameday-lockers-locator'); ?>
 					</div>
 				</label>
 			<?php endif; ?>
 			<label for="carrier_sameday_locker" class="radio">	
 				<div class="radio-wrap sameday sameday-locker <?php echo $should_check_locker ? 'selected' : ''; ?>">
 					<input type="radio" class="input-radio" value="Sameday Locker" name="carrier_sameday" id="carrier_sameday_locker" <?php checked($should_check_locker); ?> />
-					<img src="<?php echo esc_url($logo_url); ?>" alt="Sameday Logo" width="110" />
+					<img src="<?php echo esc_url($logo_easybox_url); ?>" alt="EasyBox Logo" width="110" />&nbsp;<?php _e('To EasyBox', 'smarty-sameday-lockers-locator'); ?>
 				</div>
 			</label>
 		</div>
